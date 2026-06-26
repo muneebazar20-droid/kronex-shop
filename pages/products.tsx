@@ -1,18 +1,36 @@
+'use client';
+
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
+import SearchBar from '@/components/SearchBar';
 import { PRODUCTS } from '@/lib/constants';
 import { useSettingsStore } from '@/lib/store';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 export default function Products() {
   const { settings } = useSettingsStore();
   const [filter, setFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const categories = ['All', ...new Set(PRODUCTS.map((p) => p.category))];
-  const filteredProducts =
-    filter === 'All'
-      ? PRODUCTS
-      : PRODUCTS.filter((p) => p.category === filter);
+  const categories = ['All', ...Array.from(new Set(PRODUCTS.map((p) => p.category)))];
+  
+  const filteredProducts = useMemo(() => {
+    let result = PRODUCTS;
+
+    // Category filter
+    if (filter !== 'All') {
+      result = result.filter((p) => p.category === filter);
+    }
+
+    // Search filter
+    if (searchQuery) {
+      result = result.filter((p) =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return result;
+  }, [filter, searchQuery]);
 
   return (
     <div className={settings.theme === 'dark' ? 'dark' : ''}>
@@ -27,6 +45,11 @@ export default function Products() {
 
         <section className="max-w-7xl mx-auto px-4 py-16">
           <h1 className="text-3xl font-bold mb-8">Shop Products</h1>
+
+          {/* Search Bar */}
+          <div className="mb-8">
+            <SearchBar onSearch={setSearchQuery} />
+          </div>
 
           {/* Category Filter */}
           <div className="mb-8 flex gap-4 flex-wrap">
@@ -48,11 +71,17 @@ export default function Products() {
           </div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
-          </div>
+          {filteredProducts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} {...product} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="text-xl text-gray-500">No products found</p>
+            </div>
+          )}
         </section>
       </div>
     </div>

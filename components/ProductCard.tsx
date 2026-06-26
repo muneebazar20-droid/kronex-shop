@@ -3,7 +3,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSettingsStore } from '@/lib/store';
+import { useCartStore } from '@/lib/cart-store';
 import { CURRENCIES } from '@/lib/constants';
+import { useState } from 'react';
 
 interface ProductCardProps {
   id: number;
@@ -21,8 +23,21 @@ export default function ProductCard({
   rating,
 }: ProductCardProps) {
   const { settings } = useSettingsStore();
+  const { addItem } = useCartStore();
+  const [quantity, setQuantity] = useState(1);
   const currencySymbol = CURRENCIES[settings.currency];
   const convertedPrice = convertPrice(price, settings.currency);
+
+  const handleAddToCart = () => {
+    addItem({
+      id,
+      name,
+      price,
+      quantity,
+      image,
+    });
+    alert('Added to cart!');
+  };
 
   return (
     <Link href={`/product/${id}`}>
@@ -46,7 +61,12 @@ export default function ProductCard({
             </span>
             <span className="text-yellow-500">⭐ {rating}</span>
           </div>
-          <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition">
+          <button 
+            onClick={(e) => {
+              e.preventDefault();
+              handleAddToCart();
+            }}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition">
             Add to Cart
           </button>
         </div>
