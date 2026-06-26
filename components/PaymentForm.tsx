@@ -5,142 +5,88 @@ import { useSettingsStore } from '@/lib/store';
 
 export default function PaymentForm() {
   const { settings } = useSettingsStore();
-  const [paymentMethod, setPaymentMethod] = useState('card');
-  const [cardDetails, setCardDetails] = useState({
-    cardName: '',
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setCardDetails((prev) => ({ ...prev, [name]: value }));
-  };
+  const [paymentMethod, setPaymentMethod] = useState('cod');
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Payment Method</h3>
 
       {/* Payment Method Selection */}
-      <div className="flex gap-4">
-        {['card', 'paypal', 'google'].map((method) => (
-          <label key={method} className="flex items-center gap-2 cursor-pointer">
+      <div className="space-y-3">
+        {[
+          { id: 'cod', label: '🚚 Cash on Delivery (COD)', description: 'Pay when you receive your order' },
+          { id: 'easypaisa', label: '💳 Easypaisa', description: 'Secure mobile payment' },
+        ].map((method) => (
+          <label
+            key={method.id}
+            className={`flex items-start gap-3 cursor-pointer p-4 border rounded-lg transition $${
+              paymentMethod === method.id
+                ? settings.theme === 'dark'
+                  ? 'bg-blue-900 border-blue-700'
+                  : 'bg-blue-50 border-blue-600'
+                : settings.theme === 'dark'
+                ? 'bg-gray-700 border-gray-600 hover:bg-gray-600'
+                : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
+            }`}
+          >
             <input
               type="radio"
               name="paymentMethod"
-              value={method}
-              checked={paymentMethod === method}
+              value={method.id}
+              checked={paymentMethod === method.id}
               onChange={(e) => setPaymentMethod(e.target.value)}
-              className="w-4 h-4"
+              className="w-4 h-4 mt-1"
             />
-            <span className="capitalize">
-              {method === 'card'
-                ? '💳 Credit/Debit Card'
-                : method === 'paypal'
-                ? '🅿️ PayPal'
-                : '🔵 Google Pay'}
-            </span>
+            <div>
+              <p className="font-semibold">{method.label}</p>
+              <p className="text-sm text-gray-500 mt-1">{method.description}</p>
+            </div>
           </label>
         ))}
       </div>
 
-      {/* Card Payment Form */}
-      {paymentMethod === 'card' && (
-        <div className="space-y-3 mt-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Cardholder Name</label>
-            <input
-              type="text"
-              name="cardName"
-              value={cardDetails.cardName}
-              onChange={handleInputChange}
-              placeholder="John Doe"
-              className={`w-full p-2 border rounded ${
-                settings.theme === 'dark'
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300'
-              }`}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Card Number</label>
-            <input
-              type="text"
-              name="cardNumber"
-              value={cardDetails.cardNumber}
-              onChange={handleInputChange}
-              placeholder="1234 5678 9012 3456"
-              maxLength={19}
-              className={`w-full p-2 border rounded ${
-                settings.theme === 'dark'
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300'
-              }`}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">Expiry Date</label>
-              <input
-                type="text"
-                name="expiryDate"
-                value={cardDetails.expiryDate}
-                onChange={handleInputChange}
-                placeholder="MM/YY"
-                maxLength={5}
-                className={`w-full p-2 border rounded ${
-                  settings.theme === 'dark'
-                    ? 'bg-gray-700 border-gray-600 text-white'
-                    : 'bg-white border-gray-300'
-                }`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">CVV</label>
-              <input
-                type="text"
-                name="cvv"
-                value={cardDetails.cvv}
-                onChange={handleInputChange}
-                placeholder="123"
-                maxLength={3}
-                className={`w-full p-2 border rounded ${
-                  settings.theme === 'dark'
-                    ? 'bg-gray-700 border-gray-600 text-white'
-                    : 'bg-white border-gray-300'
-                }`}
-              />
-            </div>
-          </div>
+      {/* COD Info */}
+      {paymentMethod === 'cod' && (
+        <div
+          className={`${
+            settings.theme === 'dark'
+              ? 'bg-green-900 border-green-700'
+              : 'bg-green-50 border-green-600'
+          } border rounded-lg p-4 mt-4`}
+        >
+          <p className="font-semibold text-green-700 dark:text-green-300">✅ Cash on Delivery</p>
+          <ul className="text-sm text-green-600 dark:text-green-400 mt-2 space-y-1">
+            <li>• No payment required now</li>
+            <li>• Pay when delivery arrives</li>
+            <li>• You'll receive order confirmation on WhatsApp</li>
+          </ul>
         </div>
       )}
 
-      {/* PayPal */}
-      {paymentMethod === 'paypal' && (
-        <div className={`${
-          settings.theme === 'dark'
-            ? 'bg-gray-800 border-gray-700'
-            : 'bg-gray-50 border-gray-300'
-        } border rounded-lg p-4 text-center`}>
-          <p className="text-blue-600 font-semibold">🅿️ PayPal</p>
-          <p className="text-sm text-gray-500 mt-2">You will be redirected to PayPal to complete your payment</p>
+      {/* Easypaisa Info */}
+      {paymentMethod === 'easypaisa' && (
+        <div
+          className={`${
+            settings.theme === 'dark'
+              ? 'bg-purple-900 border-purple-700'
+              : 'bg-purple-50 border-purple-600'
+          } border rounded-lg p-4 mt-4`}
+        >
+          <p className="font-semibold text-purple-700 dark:text-purple-300">💳 Easypaisa Payment</p>
+          <ol className="text-sm text-purple-600 dark:text-purple-400 mt-2 space-y-1">
+            <li>1. Click "Place Order"</li>
+            <li>2. You'll get Easypaisa payment details on WhatsApp</li>
+            <li>3. Complete payment and confirm</li>
+            <li>4. Your order will be confirmed</li>
+          </ol>
         </div>
       )}
 
-      {/* Google Pay */}
-      {paymentMethod === 'google' && (
-        <div className={`${
-          settings.theme === 'dark'
-            ? 'bg-gray-800 border-gray-700'
-            : 'bg-gray-50 border-gray-300'
-        } border rounded-lg p-4 text-center`}>
-          <p className="text-gray-800 font-semibold">🔵 Google Pay</p>
-          <p className="text-sm text-gray-500 mt-2">Quick and secure payment with Google Pay</p>
-        </div>
-      )}
+      <div className="bg-blue-100 dark:bg-blue-900 border border-blue-400 dark:border-blue-700 rounded-lg p-3 mt-4">
+        <p className="text-sm text-blue-800 dark:text-blue-200">
+          📱 <strong>WhatsApp Notification:</strong> After placing your order, you'll receive complete order details, payment instructions, and delivery updates on WhatsApp.
+        </p>
+      </div>
     </div>
   );
 }
