@@ -36,7 +36,7 @@ interface SettingsStore {
   resetSettings: () => void;
 }
 
-export const useSettingsStore = create<SettingsStore>(
+export const useSettingsStore = create<SettingsStore>()(
   persist(
     (set) => ({
       settings: defaultSettings,
