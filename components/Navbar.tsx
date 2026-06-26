@@ -1,42 +1,30 @@
-'use client';
-
 import Link from 'next/link';
-import { useSettingsStore } from '@/lib/store';
-import { useState } from 'react';
-import SettingsModal from './SettingsModal';
+import { useCart } from '../lib/store';
 
 export default function Navbar() {
-  const { settings } = useSettingsStore();
-  const [showSettings, setShowSettings] = useState(false);
+  const { cart } = useCart();
+  const count = cart.reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <>
-      <nav className={`${
-        settings.theme === 'dark'
-          ? 'bg-gray-900 text-white'
-          : 'bg-white text-gray-900'
-      } shadow-lg`}>
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-blue-600">
-            Kronex Shop
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur border-b border-white/5">
+      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <Link href="/" className="text-xl font-bold tracking-[0.2em] text-white">
+          KRONE <span className="text-[#b8860b]">X</span>
+        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/products" className="text-gray-400 hover:text-white text-sm tracking-widest uppercase transition-colors">
+            Shop
           </Link>
-          <div className="flex gap-6 items-center">
-            <Link href="/products" className="hover:text-blue-600 transition">
-              Shop
-            </Link>
-            <Link href="/cart" className="hover:text-blue-600 transition">
-              Cart
-            </Link>
-            <button
-              onClick={() => setShowSettings(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
-            >
-              ⚙️ Settings
-            </button>
-          </div>
+          <Link href="/cart" className="relative text-gray-400 hover:text-white text-sm tracking-widest uppercase transition-colors">
+            Cart
+            {count > 0 && (
+              <span className="absolute -top-2 -right-3 bg-[#b8860b] text-black text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {count}
+              </span>
+            )}
+          </Link>
         </div>
-      </nav>
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-    </>
+      </div>
+    </nav>
   );
 }
