@@ -8,6 +8,9 @@ import { CURRENCIES } from '@/lib/constants';
 import Link from 'next/link';
 import { useState } from 'react';
 
+const WHATSAPP_NUMBER = '+923165199256';
+const BUSINESS_NAME = 'Kronex Shop';
+
 function convertPrice(price: number, currency: string): number {
   const rates: Record<string, number> = {
     USD: 1,
@@ -21,9 +24,11 @@ export default function Checkout() {
   const { settings } = useSettingsStore();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('cod');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
+    phone: '',
     address: '',
     city: '',
     zipCode: '',
@@ -37,13 +42,59 @@ export default function Checkout() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const sendToWhatsApp = () => {
+    // Create order message
+    const orderDetails = items
+      .map((item) => `• ${item.name} x${item.quantity} = ${currencySymbol}${convertPrice(item.price * item.quantity, settings.currency).toFixed(2)}`)
+      .join('\n');
+
+    const message = `
+🛍️ *NEW ORDER FROM KRONEX SHOP*
+
+👤 *Customer Information:*
+Name: ${formData.fullName}
+Email: ${formData.email}
+Phone: ${formData.phone}
+
+📍 *Delivery Address:*
+${formData.address}
+${formData.city}, ${formData.zipCode}
+
+📦 *Order Items:*
+${orderDetails}
+
+💰 *Order Summary:*
+Subtotal: ${currencySymbol}${totalPrice.toFixed(2)}
+Tax (10%): ${currencySymbol}${(totalPrice * 0.1).toFixed(2)}
+Total: ${currencySymbol}${(totalPrice * 1.1).toFixed(2)}
+
+💳 *Payment Method:*
+${paymentMethod === 'cod' ? '🚚 Cash on Delivery' : '💳 Easypaisa'}
+
+---
+Order Date: ${new Date().toLocaleString()}
+`.trim();
+
+    // Encode message for WhatsApp
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+
+    // Open WhatsApp
+    window.open(whatsappUrl, '_blank');
+  };
+
   const handlePlaceOrder = () => {
-    if (formData.fullName && formData.email && formData.address && formData.city && formData.zipCode) {
+    if (formData.fullName && formData.email && formData.phone && formData.address && formData.city && formData.zipCode) {
       setOrderPlaced(true);
-      clearCart();
+      
+      // Send to WhatsApp
       setTimeout(() => {
-        window.location.href = '/';
-      }, 3000);
+        sendToWhatsApp();
+        clearCart();
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+      }, 500);
     } else {
       alert('Please fill in all fields');
     }
@@ -88,8 +139,14 @@ export default function Checkout() {
           <section className="max-w-4xl mx-auto px-4 py-16 text-center">
             <div className="text-6xl mb-4">✅</div>
             <h1 className="text-4xl font-bold mb-4">Order Placed Successfully!</h1>
-            <p className="text-gray-500 mb-4">Thank you for your purchase. Your order has been confirmed.</p>
-            <p className="text-gray-500 mb-8">Redirecting to home page in 3 seconds...</p>
+            <p className="text-gray-500 mb-2">Thank you for your purchase.</p>
+            <p className="text-green-600 font-semibold mb-4">📱 Your order details have been sent to WhatsApp!</p>
+            <p className="text-gray-500 mb-8">Our team will contact you shortly to confirm payment and delivery.</p>
+            <Link href="/products">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold">
+                Continue Shopping
+              </button>
+            </Link>
           </section>
         </div>
       </div>
@@ -141,6 +198,18 @@ export default function Checkout() {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="Email"
+                    className={`w-full p-2 border rounded ${
+                      settings.theme === 'dark'
+                        ? 'bg-gray-700 border-gray-600 text-white'
+                        : 'bg-white border-gray-300'
+                    }`}
+                  />
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="Phone Number (e.g., +923165199256)"
                     className={`w-full p-2 border rounded ${
                       settings.theme === 'dark'
                         ? 'bg-gray-700 border-gray-600 text-white'
@@ -248,9 +317,9 @@ export default function Checkout() {
               </div>
               <button
                 onClick={handlePlaceOrder}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition"
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2"
               >
-                Place Order
+                📱 Place Order & Send to WhatsApp
               </button>
             </div>
           </div>
