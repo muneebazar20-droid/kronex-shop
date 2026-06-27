@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useProducts, Product } from '../lib/store';
 
 const ADMIN_PASSWORD = 'kronex2025';
+const CLOUDINARY_UPLOAD_PRESET = 'kronex_watches';
+const CLOUDINARY_CLOUD_NAME = 'kronex-shop';
 
 export default function Admin() {
   const [authed, setAuthed] = useState(false);
@@ -10,10 +12,11 @@ export default function Admin() {
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const [editId, setEditId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [tab, setTab] = useState<'products' | 'orders'>('products');
+  const [uploading, setUploading] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
-    name: '', price: '', description: '', imageUrl: '',
-    images: '', category: '', stock: '', inStock: true, featured: false,
+    name: '', price: '', description: '', category: '', stock: '', inStock: true, featured: false,
   });
 
   const login = () => {
@@ -22,7 +25,8 @@ export default function Admin() {
   };
 
   const resetForm = () => {
-    setForm({ name: '', price: '', description: '', imageUrl: '', images: '', category: '', stock: '', inStock: true, featured: false });
+    setForm({ name: '', price: '', description: '', category: '', stock: '', inStock: true, featured: false });
+    setUploadedImages([]);
     setEditId(null);
     setShowForm(false);
   };
@@ -30,22 +34,45 @@ export default function Admin() {
   const openEdit = (p: Product) => {
     setForm({
       name: p.name, price: String(p.price), description: p.description,
-      imageUrl: p.imageUrl, images: (p.images || []).join('\n'),
       category: p.category, stock: String(p.stock), inStock: p.inStock, featured: p.featured
     });
+    setUploadedImages(p.images || [p.imageUrl]);
     setEditId(p.id);
     setShowForm(true);
   };
 
+  const uploadImages = async (files: FileList) => {
+    setUploading(true);
+    const uploaded: string[] = [];
+    for (const file of Array.from(files)) {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      try {
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+          method: 'POST', body: fd,
+        });
+        const data = await res.json();
+        if (data.secure_url) uploaded.push(data.secure_url);
+      } catch (e) {
+        console.error('Upload failed', e);
+      }
+    }
+    setUploadedImages(prev => [...prev, ...uploaded]);
+    setUploading(false);
+  };
+
   const save = () => {
-    if (!form.name || !form.price) return;
-    const imagesList = form.images.split('\n').map(s => s.trim()).filter(Boolean);
-    const mainImg = imagesList[0] || form.imageUrl;
+    if (!form.name || !form.price || uploadedImages.length === 0) {
+      alert('Please add at least one image and fill name & price');
+      return;
+    }
     const data = {
       name: form.name, price: Number(form.price), description: form.description,
-      imageUrl: mainImg, images: imagesList.length ? imagesList : [mainImg],
+      imageUrl: uploadedImages[0], images: uploadedImages,
       category: form.category || 'Watch', stock: Number(form.stock) || 0,
-      inStock: form.inStock, featured: form.featured
+      inStock: form.inStock, featured: form.featured,
+      colors: [],
     };
     if (editId) updateProduct(editId, data);
     else addProduct(data);
@@ -95,7 +122,6 @@ export default function Admin() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
-
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
@@ -111,9 +137,8 @@ export default function Admin() {
           ))}
         </div>
 
-        {/* Low stock warning */}
         {lowStock.length > 0 && (
-          <div className="bg-orange-900/20 border border-orange-500/30 p-4 mb-6 rounded">
+          <div className="bg-orange-900/20 border border-orange-500/30 p-4 mb-6">
             <p className="text-orange-400 text-sm font-medium mb-1">⚠️ Low Stock Alert</p>
             <p className="text-gray-400 text-xs">{lowStock.map(p => `${p.name} (${p.stock} left)`).join(' • ')}</p>
           </div>
@@ -125,6 +150,45 @@ export default function Admin() {
             <div className="bg-[#111] border border-white/10 w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
               <h2 className="font-bold text-lg mb-6">{editId ? 'Edit Product' : 'Add New Watch'}</h2>
               <div className="flex flex-col gap-4">
+
+                {/* Image Upload */}
+                <div>
+                  <label className="text-xs text-gray-500 uppercase tracking-widest block mb-2">Watch Images</label>
+                  <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden"
+                    onChange={e => e.target.files && uploadImages(e.target.files)} />
+                  
+                  {/* Upload Area */}
+                  <button onClick={() => fileInputRef.current?.click()}
+                    className={`w-full border-2 border-dashed py-8 text-center transition-colors ${uploading ? 'border-[#b8860b] bg-[#b8860b]/5' : 'border-white/10 hover:border-[#b8860b] hover:bg-[#b8860b]/5'}`}>
+                    {uploading ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-6 h-6 border-2 border-[#b8860b] border-t-transparent rounded-full animate-spin" />
+                        <p className="text-[#b8860b] text-sm">Uploading...</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-3xl">📸</span>
+                        <p className="text-gray-400 text-sm">Click to upload watch photos</p>
+                        <p className="text-gray-600 text-xs">Multiple images allowed</p>
+                      </div>
+                    )}
+                  </button>
+
+                  {/* Image Previews */}
+                  {uploadedImages.length > 0 && (
+                    <div className="flex gap-2 flex-wrap mt-3">
+                      {uploadedImages.map((url, i) => (
+                        <div key={i} className="relative">
+                          <img src={url} alt="" className="w-16 h-16 object-cover border border-white/10" />
+                          {i === 0 && <span className="absolute bottom-0 left-0 right-0 bg-[#b8860b] text-black text-[8px] text-center font-bold">MAIN</span>}
+                          <button onClick={() => setUploadedImages(prev => prev.filter((_, j) => j !== i))}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">×</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {[
                   { key: 'name', label: 'Watch Name', placeholder: 'Krone X Classic' },
                   { key: 'price', label: 'Price (PKR)', placeholder: '1800', type: 'number' },
@@ -139,29 +203,6 @@ export default function Admin() {
                       className="w-full bg-[#0a0a0a] border border-white/10 px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#b8860b]" />
                   </div>
                 ))}
-
-                {/* Multiple images */}
-                <div>
-                  <label className="text-xs text-gray-500 uppercase tracking-widest block mb-1">
-                    Image URLs (one per line — first image is main)
-                  </label>
-                  <textarea value={form.images}
-                    onChange={e => setForm({ ...form, images: e.target.value })}
-                    placeholder={'https://i.ibb.co/xxx/watch1.jpg\nhttps://i.ibb.co/xxx/watch2.jpg'}
-                    rows={4}
-                    className="w-full bg-[#0a0a0a] border border-white/10 px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#b8860b] resize-none text-sm" />
-                  <p className="text-gray-600 text-xs mt-1">Upload images at imgbb.com → paste Direct Links here</p>
-                </div>
-
-                {/* Image previews */}
-                {form.images && (
-                  <div className="flex gap-2 flex-wrap">
-                    {form.images.split('\n').filter(Boolean).map((url, i) => (
-                      <img key={i} src={url.trim()} alt="" className="w-16 h-16 object-cover bg-[#0a0a0a] border border-white/10"
-                        onError={e => (e.currentTarget.style.display = 'none')} />
-                    ))}
-                  </div>
-                )}
 
                 <div>
                   <label className="text-xs text-gray-500 uppercase tracking-widest block mb-1">Description</label>
@@ -184,7 +225,8 @@ export default function Admin() {
 
               <div className="flex gap-3 mt-6">
                 <button onClick={resetForm} className="border border-white/10 text-gray-400 hover:text-white px-6 py-3 text-sm uppercase tracking-widest transition-colors">Cancel</button>
-                <button onClick={save} className="flex-1 bg-[#b8860b] hover:bg-[#d4a017] text-black font-bold py-3 uppercase tracking-widest transition-colors">
+                <button onClick={save} disabled={uploading}
+                  className="flex-1 bg-[#b8860b] hover:bg-[#d4a017] disabled:opacity-50 text-black font-bold py-3 uppercase tracking-widest transition-colors">
                   {editId ? 'Save Changes' : 'Add Product'}
                 </button>
               </div>
@@ -210,33 +252,33 @@ export default function Admin() {
                       <img src={p.imageUrl} alt={p.name} className="w-12 h-12 object-cover bg-[#1a1a1a]" />
                       <div>
                         <p className="font-medium">{p.name}</p>
-                        <p className="text-gray-500 text-xs">{p.category} • {(p.images || []).length} images</p>
+                        <p className="text-gray-500 text-xs">{p.category} • {(p.images || []).length} photos</p>
                       </div>
                     </div>
                   </td>
                   <td className="py-4 pr-4 text-[#b8860b] font-bold">Rs. {p.price.toLocaleString()}</td>
                   <td className="py-4 pr-4">
                     <span className={`font-medium ${p.stock <= 3 ? 'text-orange-400' : 'text-gray-300'}`}>
-                      {p.stock} units {p.stock <= 3 && '⚠️'}
+                      {p.stock} {p.stock <= 3 && '⚠️'}
                     </span>
                   </td>
                   <td className="py-4 pr-4">
                     <button onClick={() => updateProduct(p.id, { inStock: !p.inStock })}
-                      className={`text-xs px-2 py-1 uppercase tracking-widest cursor-pointer transition-colors ${p.inStock ? 'bg-green-900/30 text-green-400 hover:bg-red-900/30 hover:text-red-400' : 'bg-red-900/30 text-red-400 hover:bg-green-900/30 hover:text-green-400'}`}>
+                      className={`text-xs px-2 py-1 uppercase tracking-widest cursor-pointer transition-colors ${p.inStock ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
                       {p.inStock ? 'In Stock' : 'Out of Stock'}
                     </button>
                   </td>
                   <td className="py-4 pr-4">
                     <button onClick={() => updateProduct(p.id, { featured: !p.featured })}
-                      className={`text-xs transition-colors ${p.featured ? 'text-[#b8860b]' : 'text-gray-600 hover:text-gray-400'}`}>
-                      {p.featured ? '★ Featured' : '☆ Set Featured'}
+                      className={`text-xs ${p.featured ? 'text-[#b8860b]' : 'text-gray-600 hover:text-gray-400'}`}>
+                      {p.featured ? '★ Featured' : '☆ Set'}
                     </button>
                   </td>
                   <td className="py-4">
                     <div className="flex gap-3">
-                      <button onClick={() => openEdit(p)} className="text-gray-400 hover:text-white text-xs uppercase tracking-widest transition-colors">Edit</button>
+                      <button onClick={() => openEdit(p)} className="text-gray-400 hover:text-white text-xs uppercase tracking-widest">Edit</button>
                       <button onClick={() => { if (confirm(`Delete ${p.name}?`)) deleteProduct(p.id); }}
-                        className="text-gray-600 hover:text-red-400 text-xs uppercase tracking-widest transition-colors">Delete</button>
+                        className="text-gray-600 hover:text-red-400 text-xs uppercase tracking-widest">Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -246,17 +288,6 @@ export default function Admin() {
           {products.length === 0 && (
             <div className="text-center text-gray-600 py-16">No products yet. Add your first watch.</div>
           )}
-        </div>
-
-        {/* Tips */}
-        <div className="mt-10 bg-[#111] border border-white/5 p-5">
-          <p className="text-[#b8860b] text-xs uppercase tracking-widest mb-3">How to Add Watch Images</p>
-          <ol className="text-gray-500 text-sm space-y-1 list-decimal list-inside">
-            <li>Go to <a href="https://imgbb.com" target="_blank" className="text-[#b8860b] hover:underline">imgbb.com</a></li>
-            <li>Upload your watch photo(s)</li>
-            <li>Click "Direct link" and copy the URL</li>
-            <li>Paste in the Image URLs box (one per line for multiple)</li>
-          </ol>
         </div>
       </div>
     </div>
