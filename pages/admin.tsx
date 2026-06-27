@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useProducts, Product, ProductColor } from '../lib/store';
 
 const ADMIN_PASSWORD = 'kronex2025';
@@ -21,7 +21,7 @@ export default function Admin() {
   const [authed, setAuthed] = useState(false);
   const [pw, setPw] = useState('');
   const [pwError, setPwError] = useState('');
-  const { products, addProduct, updateProduct, deleteProduct } = useProducts();
+  const { products, fetchProducts, addProduct, updateProduct, deleteProduct } = useProducts();
   const [editId, setEditId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -29,6 +29,8 @@ export default function Admin() {
   const [colorList, setColorList] = useState<ProductColor[]>([]);
   const [newColorName, setNewColorName] = useState('');
   const [newColorHex, setNewColorHex] = useState('#b8860b');
+
+  useEffect(() => { fetchProducts(); }, []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     name: '', price: '', description: '', category: '', stock: '', inStock: true, featured: false,
