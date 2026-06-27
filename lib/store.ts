@@ -7,6 +7,7 @@ export interface Product {
   price: number;
   description: string;
   imageUrl: string;
+  images: string[];
   inStock: boolean;
   stock: number;
   featured: boolean;
@@ -41,6 +42,11 @@ const DEFAULT_PRODUCTS: Product[] = [
     price: 1800,
     description: 'Elegant stainless steel case with mineral glass. Perfect for everyday wear.',
     imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80',
+      'https://images.unsplash.com/photo-1548171915-3e1d09d42b28?w=600&q=80',
+      'https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=600&q=80',
+    ],
     inStock: true,
     stock: 10,
     featured: true,
@@ -52,6 +58,10 @@ const DEFAULT_PRODUCTS: Product[] = [
     price: 2200,
     description: 'Built for the active lifestyle. Water-resistant with bold dial design.',
     imageUrl: 'https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=600&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=600&q=80',
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80',
+    ],
     inStock: true,
     stock: 8,
     featured: true,
@@ -63,6 +73,10 @@ const DEFAULT_PRODUCTS: Product[] = [
     price: 2800,
     description: 'Premium gold-tone finish. Statement piece for formal occasions.',
     imageUrl: 'https://images.unsplash.com/photo-1548171915-3e1d09d42b28?w=600&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1548171915-3e1d09d42b28?w=600&q=80',
+      'https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=600&q=80',
+    ],
     inStock: true,
     stock: 5,
     featured: true,

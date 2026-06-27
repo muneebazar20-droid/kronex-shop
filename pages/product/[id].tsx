@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from '../../components/Navbar';
 import { useProducts, useCart } from '../../lib/store';
@@ -10,6 +11,7 @@ export default function ProductDetail() {
   const { products } = useProducts();
   const { addToCart } = useCart();
   const product = products.find(p => p.id === id);
+  const [activeImg, setActiveImg] = useState(0);
 
   if (!product) return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
@@ -17,6 +19,8 @@ export default function ProductDetail() {
       <p className="text-gray-500">Product not found.</p>
     </div>
   );
+
+  const images = product.images?.length ? product.images : [product.imageUrl];
 
   const orderOnWhatsApp = () => {
     const msg = `Hi! I want to order:\n\n*${product.name}*\nPrice: Rs. ${product.price.toLocaleString()}\n\nPlease confirm availability.`;
@@ -31,13 +35,46 @@ export default function ProductDetail() {
           ← Back
         </button>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          <div className="aspect-square bg-[#111] overflow-hidden">
-            <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+          {/* Image Gallery */}
+          <div>
+            <div className="aspect-square bg-[#111] overflow-hidden mb-3">
+              <img src={images[activeImg]} alt={product.name} className="w-full h-full object-cover" />
+            </div>
+            {images.length > 1 && (
+              <div className="flex gap-2">
+                {images.map((img, i) => (
+                  <button key={i} onClick={() => setActiveImg(i)}
+                    className={`w-16 h-16 overflow-hidden border-2 transition-all ${activeImg === i ? 'border-[#b8860b]' : 'border-white/10 hover:border-white/30'}`}>
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Details */}
           <div className="flex flex-col justify-center">
             <p className="text-[#b8860b] text-xs tracking-widest uppercase mb-2">{product.category}</p>
             <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-            <p className="text-gray-400 mb-6">{product.description}</p>
+            <p className="text-gray-400 mb-4">{product.description}</p>
+
+            {/* Stock counter */}
+            {product.inStock && product.stock <= 10 && (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-orange-400 text-sm font-medium">
+                    {product.stock <= 3 ? '🔥' : '⚡'} Only {product.stock} left in stock!
+                  </span>
+                </div>
+                <div className="w-full bg-white/10 h-1.5 rounded-full">
+                  <div
+                    className="bg-[#b8860b] h-1.5 rounded-full transition-all"
+                    style={{ width: `${Math.max(10, (product.stock / 20) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             <p className="text-4xl font-bold text-white mb-8">Rs. {product.price.toLocaleString()}</p>
 
             {product.inStock ? (

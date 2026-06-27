@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { useProducts } from '../lib/store';
 import Navbar from '../components/Navbar';
 import ProductCard from '../components/ProductCard';
+import Countdown from '../components/Countdown';
 
 export default function Home() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <Navbar />
+      <Countdown />
 
       {/* Hero */}
       <section className="relative flex flex-col items-center justify-center text-center px-4 pt-32 pb-24 overflow-hidden">
@@ -65,7 +67,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-white/5 py-8 text-center text-gray-600 text-sm">
         © 2025 Krone X. All rights reserved. | Rawalpindi, Pakistan
       </footer>
