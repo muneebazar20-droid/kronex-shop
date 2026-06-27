@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import { useCart } from '../lib/store';
 
 const WHATSAPP_NUMBER = '923165199256';
-const EASYPAISA_NUMBER = '03001234567'; // CHANGE THIS
+const EASYPAISA_NUMBER = '03165199256';
 
 export default function Cart() {
   const { cart, removeFromCart, updateQty, clearCart, total } = useCart();
@@ -24,10 +24,10 @@ export default function Cart() {
 
   const placeOrder = () => {
     if (!validate()) return;
-
-    const items = cart.map(i => `• ${i.product.name} × ${i.quantity} = Rs. ${(i.product.price * i.quantity).toLocaleString()}`).join('\n');
+    const items = cart.map(i =>
+      `• ${i.product.name}${i.selectedColor ? ` (${i.selectedColor.name})` : ''} × ${i.quantity} = Rs. ${(i.product.price * i.quantity).toLocaleString()}`
+    ).join('\n');
     const msg = `🕐 *New Order — Krone X*\n\n*Customer:* ${form.name}\n*Phone:* ${form.phone}\n*City:* ${form.city}\n*Address:* ${form.address}\n\n*Items:*\n${items}\n\n*Total:* Rs. ${total().toLocaleString()}\n*Payment:* ${payMethod === 'cod' ? 'Cash on Delivery' : 'Easypaisa'}\n\nPlease confirm this order. Thank you!`;
-
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     clearCart();
     setStep('success');
@@ -66,12 +66,18 @@ export default function Cart() {
           <>
             <h1 className="text-3xl font-bold mb-8">Your Cart</h1>
             <div className="flex flex-col gap-4 mb-8">
-              {cart.map(({ product, quantity }) => (
-                <div key={product.id} className="flex gap-4 bg-[#111] border border-white/5 p-4">
+              {cart.map(({ product, quantity, selectedColor }, idx) => (
+                <div key={idx} className="flex gap-4 bg-[#111] border border-white/5 p-4">
                   <img src={product.imageUrl} alt={product.name} className="w-20 h-20 object-cover bg-[#1a1a1a]" />
                   <div className="flex-1">
                     <p className="font-bold">{product.name}</p>
-                    <p className="text-[#b8860b] text-sm">Rs. {product.price.toLocaleString()}</p>
+                    {selectedColor && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: selectedColor.hex }} />
+                        <span className="text-gray-500 text-xs">{selectedColor.name}</span>
+                      </div>
+                    )}
+                    <p className="text-[#b8860b] text-sm mt-1">Rs. {product.price.toLocaleString()}</p>
                     <div className="flex items-center gap-3 mt-2">
                       <button onClick={() => updateQty(product.id, quantity - 1)} className="w-6 h-6 border border-white/20 hover:border-[#b8860b] text-white flex items-center justify-center text-sm transition-colors">−</button>
                       <span className="text-sm">{quantity}</span>
@@ -99,13 +105,20 @@ export default function Cart() {
         {step === 'checkout' && (
           <>
             <h1 className="text-3xl font-bold mb-8">Checkout</h1>
-
-            {/* Order Summary */}
             <div className="bg-[#111] border border-white/5 p-4 mb-6">
               <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Order Summary</p>
-              {cart.map(({ product, quantity }) => (
-                <div key={product.id} className="flex justify-between text-sm py-1">
-                  <span className="text-gray-400">{product.name} × {quantity}</span>
+              {cart.map(({ product, quantity, selectedColor }, idx) => (
+                <div key={idx} className="flex justify-between text-sm py-1">
+                  <span className="text-gray-400">
+                    {product.name}
+                    {selectedColor && (
+                      <span className="ml-2 inline-flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: selectedColor.hex }} />
+                        <span className="text-gray-600">{selectedColor.name}</span>
+                      </span>
+                    )}
+                    {' '}× {quantity}
+                  </span>
                   <span>Rs. {(product.price * quantity).toLocaleString()}</span>
                 </div>
               ))}
@@ -115,7 +128,6 @@ export default function Cart() {
               </div>
             </div>
 
-            {/* Payment Method */}
             <div className="mb-6">
               <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Payment Method</p>
               <div className="grid grid-cols-2 gap-3">
@@ -137,7 +149,6 @@ export default function Cart() {
               )}
             </div>
 
-            {/* Form */}
             <div className="flex flex-col gap-4 mb-8">
               {[
                 { key: 'name', label: 'Full Name', type: 'text', placeholder: 'Muhammad Ali' },
@@ -147,13 +158,10 @@ export default function Cart() {
               ].map(f => (
                 <div key={f.key}>
                   <label className="text-xs text-gray-500 uppercase tracking-widest block mb-1">{f.label}</label>
-                  <input
-                    type={f.type}
-                    placeholder={f.placeholder}
+                  <input type={f.type} placeholder={f.placeholder}
                     value={form[f.key as keyof typeof form]}
                     onChange={e => setForm({ ...form, [f.key]: e.target.value })}
-                    className={`w-full bg-[#111] border px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#b8860b] transition-colors ${errors[f.key] ? 'border-red-500' : 'border-white/10'}`}
-                  />
+                    className={`w-full bg-[#111] border px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#b8860b] transition-colors ${errors[f.key] ? 'border-red-500' : 'border-white/10'}`} />
                   {errors[f.key] && <p className="text-red-400 text-xs mt-1">{errors[f.key]}</p>}
                 </div>
               ))}
