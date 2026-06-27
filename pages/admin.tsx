@@ -3,7 +3,7 @@ import { useProducts, Product } from '../lib/store';
 
 const ADMIN_PASSWORD = 'kronex2025';
 const CLOUDINARY_UPLOAD_PRESET = 'kronex_watches';
-const CLOUDINARY_CLOUD_NAME = 'kronex-shop';
+const CLOUDINARY_CLOUD_NAME = 'dnu1evy86';
 
 export default function Admin() {
   const [authed, setAuthed] = useState(false);
