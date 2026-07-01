@@ -17,26 +17,46 @@ export default function Home() {
       <Navbar />
       <Countdown />
 
-      <section className="relative flex flex-col items-center justify-center text-center px-4 pt-32 pb-24 overflow-hidden min-h-[90vh]">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 bg-[#0a0a0a]/75 z-10" />
-          <div className="absolute inset-0 z-0" style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1594534475808-b18fc33b045e?w=1400&q=80')`,
-            backgroundSize: 'cover', backgroundPosition: 'center',
-            animation: 'slowzoom 20s ease-in-out infinite alternate',
-          }} />
+      <section className="relative overflow-hidden border-b border-white/5">
+        <div className="pointer-events-none absolute -right-24 top-1/2 -translate-y-1/2 w-[620px] h-[620px] hidden md:block">
+          {[620, 480, 340].map((size) => (
+            <div key={size} className="absolute rounded-full border border-[#b8860b]/15"
+              style={{ width: size, height: size, top: `${(620 - size) / 2}px`, left: `${(620 - size) / 2}px` }} />
+          ))}
         </div>
-        <style>{`@keyframes slowzoom { from { transform: scale(1); } to { transform: scale(1.08); } }`}</style>
-        <div className="relative z-20">
-          <p className="text-[#b8860b] tracking-[0.3em] text-xs uppercase mb-4 font-medium">Krone X — Affordable Luxury</p>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-none">
-            Time, Crafted<br /><span className="text-[#b8860b]">for You.</span>
-          </h1>
-          <p className="text-gray-300 max-w-md mb-10 text-lg mx-auto">Premium watches at prices that make sense. Delivered to your door, cash on delivery.</p>
-          <button onClick={() => router.push('/products')}
-            className="bg-[#b8860b] hover:bg-[#d4a017] text-black font-bold px-10 py-4 tracking-widest text-sm uppercase transition-all duration-300">
-            Shop Now
-          </button>
+
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-[80px_1fr_1fr] gap-6 max-w-6xl mx-auto px-6 sm:px-10 pt-32 sm:pt-40 pb-20">
+          <div className="hidden md:flex flex-col items-start gap-6 pt-4">
+            <div className="w-px h-8 bg-gradient-to-b from-transparent to-[#b8860b]/40" />
+            {['Sovereign', 'Regent', 'Monarch', 'Duke'].map((name, i) => (
+              <button key={name} onClick={() => router.push('/products')}
+                className={`text-[11px] tracking-[0.15em] uppercase text-left leading-tight transition-colors ${
+                  i === 1 ? 'text-[#b8860b]' : 'text-gray-500 hover:text-white'
+                }`}>
+                {name}
+              </button>
+            ))}
+            <div className="w-px h-8 bg-gradient-to-t from-transparent to-[#b8860b]/40" />
+          </div>
+
+          <div className="flex flex-col justify-center gap-6 text-center md:text-left items-center md:items-start">
+            <p className="text-[#b8860b] tracking-[0.3em] text-xs uppercase font-medium">Krone X — Affordable Luxury</p>
+            <h1 className="text-5xl md:text-6xl font-bold tracking-tight leading-none">
+              Time, Crafted<br /><span className="text-[#b8860b]">for You.</span>
+            </h1>
+            <p className="text-gray-400 max-w-sm text-base">
+              Premium watches at prices that make sense. Delivered to your door, cash on delivery.
+            </p>
+            <button onClick={() => router.push('/products')}
+              className="group flex items-center gap-3 bg-[#b8860b] hover:bg-[#d4a017] text-black font-bold px-10 py-4 tracking-widest text-sm uppercase transition-all duration-300">
+              Shop Now
+              <span className="transition-transform group-hover:translate-x-1">→</span>
+            </button>
+          </div>
+
+          <div className="relative flex items-center justify-center min-h-[280px] md:min-h-0">
+            <WatchMark />
+          </div>
         </div>
       </section>
 
@@ -77,6 +97,27 @@ export default function Home() {
       <footer className="border-t border-white/5 py-8 text-center text-gray-600 text-sm">
         © 2025 Krone X. All rights reserved. | Rawalpindi, Pakistan
       </footer>
+    </div>
+  );
+}
+
+function WatchMark() {
+  return (
+    <div className="relative w-56 h-56 sm:w-72 sm:h-72">
+      <div className="absolute inset-0 rounded-full border border-[#b8860b]/25" />
+      <div className="absolute inset-6 rounded-full border border-[#b8860b]/40" />
+      <div className="absolute inset-10 rounded-full bg-gradient-to-br from-[#141414] to-[#0a0a0a] border border-[#b8860b]/60 shadow-[0_0_60px_-10px_rgba(184,134,11,0.35)]">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="absolute left-1/2 top-1/2 w-[2px] h-3 bg-[#b8860b]/70 origin-bottom"
+            style={{ transform: `rotate(${i * 30}deg) translate(-50%, -96px)` }} />
+        ))}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="font-bold text-[#b8860b] text-xs tracking-[0.3em]">KX</span>
+        </div>
+        <div className="absolute left-1/2 top-1/2 w-[1.5px] h-20 bg-[#b8860b] origin-bottom"
+          style={{ transform: 'translate(-50%, -100%)', animation: 'kx-sweep 60s linear infinite' }} />
+      </div>
+      <style>{`@keyframes kx-sweep { from { transform: translate(-50%, -100%) rotate(0deg); } to { transform: translate(-50%, -100%) rotate(360deg); } }`}</style>
     </div>
   );
 }
